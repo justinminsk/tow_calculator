@@ -51,17 +51,22 @@ def calc_to_wound(strength: int):
     return result_dict
 
 # TODO: add reroll 1/failed hit and wounds
-# TODO: posion weapons (6 to hit auto wound)
 # TODO: add multi wound
-def calc_damage(models: int, attacks: int, to_hit: int, to_wound: int):
+def calc_damage(models: int, attacks: int, to_hit: int, to_wound: int, poison = False):
     if to_wound == 0:
         return 0
     # TODO: add options based on ToW skills ie reroll to wound
     number_of_attacks = models * attacks
-    number_hit = number_of_attacks * ((6 - to_hit + 1) / 6)
-    number_wound = number_hit * ((6 - to_wound + 1) / 6)
+    number_hit = 0
+    number_wound = 0
+    if poison == True:
+        sixes = number_of_attacks / 6
+        number_hit = (number_of_attacks - sixes) * ((6 - to_hit + 1) / 6)
+        number_wound = number_hit * ((6 - to_wound + 1) / 6) + sixes
+    else:
+        number_hit = number_of_attacks * ((6 - to_hit + 1) / 6)
+        number_wound = number_hit * ((6 - to_wound + 1) / 6)
     return number_wound
-
 
 # TODO: add saves later
 def result_table_creation(weapon_skill: int, strength: int, models: int, attacks: int):
