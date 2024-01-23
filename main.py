@@ -50,7 +50,9 @@ def calc_to_wound(strength: int):
     result_dict = wound_look_up_dict[strength]
     return result_dict
 
-
+# TODO: add reroll 1/failed hit and wounds
+# TODO: posion weapons (6 to hit auto wound)
+# TODO: add multi wound
 def calc_damage(models: int, attacks: int, to_hit: int, to_wound: int):
     if to_wound == 0:
         return 0
