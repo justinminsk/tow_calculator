@@ -2,13 +2,22 @@ import panel as pn
 import pandas as pd
 import hvplot.pandas
 
-models_widget = pn.widgets.IntInput(name='Models', value=1, start=1, end=100)
-attacks_widget = pn.widgets.IntInput(name='Attacks', value=1, start=1, end=20)
-weapon_skill_widget = pn.widgets.IntInput(name='Weapon Skill', value=1, start=1, end=10)
-strength_widget = pn.widgets.IntInput(name='Strength', value=1, start=1, end=10)
-target_toughness_widget = pn.widgets.IntInput(name='Target Toughness', value=1, start=1, end=10)
-target_weapon_skill_widget = pn.widgets.IntInput(name='Target Weapon Skill', value=1, start=1, end=10)
-target_selector_widget = pn.widgets.Select(name='Target', options=['Target Toughness', 'Target Weapon Skill'], value="Target Toughness")
+models_widget = pn.widgets.IntInput(name="Models", value=1, start=1, end=100)
+attacks_widget = pn.widgets.IntInput(name="Attacks", value=1, start=1, end=20)
+weapon_skill_widget = pn.widgets.IntInput(name="Weapon Skill", value=1, start=1, end=10)
+strength_widget = pn.widgets.IntInput(name="Strength", value=1, start=1, end=10)
+target_toughness_widget = pn.widgets.IntInput(
+    name="Target Toughness", value=1, start=1, end=10
+)
+target_weapon_skill_widget = pn.widgets.IntInput(
+    name="Target Weapon Skill", value=1, start=1, end=10
+)
+target_selector_widget = pn.widgets.Select(
+    name="Target",
+    options=["Target Toughness", "Target Weapon Skill"],
+    value="Target Toughness",
+)
+
 
 def calc_to_hit(weapon_skill: int):
     result_dict = {}
@@ -24,6 +33,7 @@ def calc_to_hit(weapon_skill: int):
         result_dict[opp_weapon_skill] = to_hit
     return result_dict
 
+
 def calc_to_wound(strength: int):
     wound_look_up_dict = {
         1: {1: 4, 2: 5, 3: 6, 4: 6, 5: 6, 6: 6, 7: 0, 8: 0, 9: 0, 10: 0},
@@ -35,10 +45,11 @@ def calc_to_wound(strength: int):
         7: {1: 2, 2: 2, 3: 2, 4: 2, 5: 2, 6: 3, 7: 4, 8: 5, 9: 6, 10: 6},
         8: {1: 2, 2: 2, 3: 2, 4: 2, 5: 2, 6: 2, 7: 3, 8: 4, 9: 5, 10: 6},
         9: {1: 2, 2: 2, 3: 2, 4: 2, 5: 2, 6: 2, 7: 2, 8: 3, 9: 4, 10: 5},
-        10: {1: 2, 2: 2, 3: 2, 4: 2, 5: 2, 6: 2, 7: 2, 8: 2, 9: 3, 10: 4}
+        10: {1: 2, 2: 2, 3: 2, 4: 2, 5: 2, 6: 2, 7: 2, 8: 2, 9: 3, 10: 4},
     }
     result_dict = wound_look_up_dict[strength]
     return result_dict
+
 
 def calc_damage(models: int, attacks: int, to_hit: int, to_wound: int):
     if to_wound == 0:
@@ -49,12 +60,13 @@ def calc_damage(models: int, attacks: int, to_hit: int, to_wound: int):
     number_wound = number_hit * ((6 - to_wound + 1) / 6)
     return number_wound
 
+
 # TODO: add saves later
 def result_table_creation(weapon_skill: int, strength: int, models: int, attacks: int):
     if weapon_skill and strength and models and attacks:
         hit_dict = calc_to_hit(weapon_skill)
         wound_dict = calc_to_wound(strength)
-        
+
         result_dict_list = []
         for op_ws in hit_dict:
             for t in wound_dict:
@@ -62,47 +74,88 @@ def result_table_creation(weapon_skill: int, strength: int, models: int, attacks
                 result_dict_list.append(
                     {"toughness": t, "opponents weapon skill": op_ws, "damage": damage}
                 )
-        return pd.DataFrame.from_records(
-                result_dict_list
-            ).sort_values(by=['toughness', 'opponents weapon skill'])
+        return pd.DataFrame.from_records(result_dict_list).sort_values(
+            by=["toughness", "opponents weapon skill"]
+        )
     else:
         return pd.Dataframe()
 
-@pn.depends(weapon_skill_widget, strength_widget, models_widget, attacks_widget,
-            target_toughness_widget, target_weapon_skill_widget, target_selector_widget)
-def make_table(weapon_skill: int, strength: int, models: int, attacks: int,
-               target_toughness: int, target_weapon_skill: int, target_select: str):
-    selector_dict = {"Target Toughness": "toughness", "Target Weapon Skill": "opponents weapon skill"}
-
-    result_table = result_table_creation(weapon_skill, strength, models, attacks)
-    if target_select == "Target Toughness":
-        result_table = result_table[result_table[selector_dict[target_select]]==target_toughness]
-    if target_select == "Target Weapon Skill":
-        result_table = result_table[result_table[selector_dict[target_select]]==target_weapon_skill]
-    return pn.widgets.DataFrame(result_table)
 
 @pn.depends(
-    weapon_skill_widget, strength_widget, models_widget, attacks_widget,
-    target_toughness_widget, target_weapon_skill_widget, target_selector_widget
+    weapon_skill_widget,
+    strength_widget,
+    models_widget,
+    attacks_widget,
+    target_toughness_widget,
+    target_weapon_skill_widget,
+    target_selector_widget,
 )
-def plot_results_line(
-    weapon_skill: int, strength: int, models: int, attacks: int, target_toughness: int,
-    target_weapon_skill: int, target_select: str
+def make_table(
+    weapon_skill: int,
+    strength: int,
+    models: int,
+    attacks: int,
+    target_toughness: int,
+    target_weapon_skill: int,
+    target_select: str,
 ):
-    selector_dict = {"Target Toughness": "toughness", "Target Weapon Skill": "opponents weapon skill"}
-    
+    selector_dict = {
+        "Target Toughness": "toughness",
+        "Target Weapon Skill": "opponents weapon skill",
+    }
+
     result_table = result_table_creation(weapon_skill, strength, models, attacks)
     if target_select == "Target Toughness":
-        result_table = result_table[result_table[selector_dict[target_select]]==target_toughness]
+        result_table = result_table[
+            result_table[selector_dict[target_select]] == target_toughness
+        ]
+    if target_select == "Target Weapon Skill":
+        result_table = result_table[
+            result_table[selector_dict[target_select]] == target_weapon_skill
+        ]
+    return pn.widgets.DataFrame(result_table)
+
+
+@pn.depends(
+    weapon_skill_widget,
+    strength_widget,
+    models_widget,
+    attacks_widget,
+    target_toughness_widget,
+    target_weapon_skill_widget,
+    target_selector_widget,
+)
+def plot_results_line(
+    weapon_skill: int,
+    strength: int,
+    models: int,
+    attacks: int,
+    target_toughness: int,
+    target_weapon_skill: int,
+    target_select: str,
+):
+    selector_dict = {
+        "Target Toughness": "toughness",
+        "Target Weapon Skill": "opponents weapon skill",
+    }
+
+    result_table = result_table_creation(weapon_skill, strength, models, attacks)
+    if target_select == "Target Toughness":
+        result_table = result_table[
+            result_table[selector_dict[target_select]] == target_toughness
+        ]
         graph_x = "opponents weapon skill"
     if target_select == "Target Weapon Skill":
-        result_table = result_table[result_table[selector_dict[target_select]]==target_weapon_skill]
+        result_table = result_table[
+            result_table[selector_dict[target_select]] == target_weapon_skill
+        ]
         graph_x = "toughness"
 
-    return result_table.hvplot.line(x=graph_x, y='damage')
+    return result_table.hvplot.line(x=graph_x, y="damage")
+
 
 template = pn.template.MaterialTemplate(
-    title='ToW Calculator',
+    title="ToW Calculator",
 )
 template.main.append(
     pn.Column(
@@ -112,10 +165,8 @@ template.main.append(
             pn.Column(target_toughness_widget, target_weapon_skill_widget),
             target_selector_widget,
         ),
-        pn.Row(
-            make_table, plot_results_line
-        )
+        pn.Row(make_table, plot_results_line),
     )
 )
 
-template.servable(target='panel')
+template.servable(target="panel")
